@@ -1,0 +1,33 @@
+FROM 192.168.31.85:5523/mxnet:1.0
+
+ENV JUPYTER_VERSION=1.0.0
+
+MAINTAINER weinenglong
+
+# install jupyter
+
+RUN apt-get update && apt-get autoremove -y \
+    && apt-get install -y python-dev \
+    && pip install jupyter==${JUPYTER_VERSION} \
+    && rm -rf /root/.cache
+
+# Install tini
+
+RUN wget -q https://github.com/krallin/tini/releases/download/v0.17.0/tini \
+    && chmod +x /tini
+
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple/ matplotlib
+	
+RUN apt-get install -y vim
+	
+COPY notebooks /notebooks
+COPY gotty /
+ADD mxnet.sh /
+COPY config.json / 
+RUN chmod 644 /config.json
+RUN chmod 777 /gotty
+RUN chmod -R 777 /notebooks
+RUN chmod 777 /mxnet.sh
+
+ENTRYPOINT ["/tini", "--"]
+CMD ["/bin/bash", "-c", "sh /mxnet.sh"]
